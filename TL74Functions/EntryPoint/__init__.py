@@ -9,4 +9,4 @@ def main(req: HttpRequest) -> HttpResponse:
 
     response_message, status_code = process_filing_request(req)
 
-    return func.HttpResponse(response_message, status_code=status_code)
+    return HttpResponse(response_message, status_code=status_code)
