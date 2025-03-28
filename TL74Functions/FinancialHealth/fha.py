@@ -17,25 +17,18 @@ def fha(accn):
 
     try:
         filing = get_by_accession_number(str(accn))
-        # print(filing)
     except Exception as e:
-        # print("FHA Error: unable to find filing with accession number " + str(accn))
-        exit()
+        return "FHA Error: unable to find filing with accession number " + str(accn)
 
     try:
         company = Company(str(filing.cik)).get_facts().to_pandas()
     except Exception as e:
-        # print("FHA Error: unable to generate pandas dataframe for company with CIK " + str(filing.cik))
-        exit()
+        return "FHA Error: unable to generate pandas dataframe for company with CIK " + str(filing.cik)
 
     try:
         company_accn_subset = company[(company['namespace'] == 'us-gaap') & (company['accn'] == str(accn))]
-        
-        # print(f"Extracted {len(company_accn_subset)} rows for accession number {accn}")
-        # print(company_accn_subset)
     except Exception as e:
-        # print(f"FHA Error extracting rows for accession number {accn}: {e}")
-        exit()
+        return f"FHA Error extracting rows for accession number {accn}: {e}"
 
     try:
         subset_json_dict = {} # Convert the dataframe to a JSON-serializable dictionary, keyed by the row index
@@ -48,15 +41,13 @@ def fha(accn):
         subset_json_str = json.dumps(subset_json_dict, indent=4, default=str)  # default=str converts Timestamp to string
 
     except Exception as e:
-        # print(f"FHA Error converting dataframe subset to JSON: {e}")
-        exit()
+        return f"FHA Error converting dataframe subset to JSON: {e}"
 
     try:
         company['end'] = pd.to_datetime(company['end'])
         company['timestamp'] = company['end'].astype('int64')
     except Exception as e:
-        # print("FHA Error: unable to parse/organize date format")
-        exit()
+        return "FHA Error: unable to parse/organize date format"
 
     def retrieve_value_full(company, accn, fact_name):
         try:
@@ -297,12 +288,6 @@ def fha(accn):
 
     # Convert the list of dictionaries to a JSON string
     json_output_analysis = json.dumps(data, indent=4)
-
-    # Print the JSON strings
-    # print("Raw data JSON string:")
-    # print(subset_json_str)
-    # print("Analyzed data JSON string:")
-    # print(json_output_analysis)
 
     output_json = {"raw": subset_json_str, "calculated": json_output_analysis}
     
