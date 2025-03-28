@@ -1,9 +1,6 @@
 azure-functions
 azure-cosmos
 azure-core
-os
-logging
-sys
 edgar
 pandas
 json
