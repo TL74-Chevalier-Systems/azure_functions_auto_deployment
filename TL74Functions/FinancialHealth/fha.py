@@ -38,7 +38,7 @@ def fha(accn):
             subset_json_dict[str(idx)] = row_data  # Use the dataframe index as the key, convert to string for JSON compatibility
 
         # Convert the dictionary to a JSON string with indentation for readability
-        subset_json_str = json.dumps(subset_json_dict, indent=4, default=str)  # default=str converts Timestamp to string
+        # subset_json_str = json.dumps(subset_json_dict, indent=4, default=str)  # default=str converts Timestamp to string
 
     except Exception as e:
         return f"FHA Error converting dataframe subset to JSON: {e}"
@@ -286,10 +286,10 @@ def fha(accn):
             data.update(create_analysis_json(title, definition, analysis_obj, if_generated, generated_explanation))
 
 
-    # Convert the list of dictionaries to a JSON string
-    json_output_analysis = json.dumps(data, indent=4)
+    # # Convert the list of dictionaries to a JSON string
+    # json_output_analysis = json.dumps(data, indent=4)
 
-    output_json = {"raw": subset_json_str, "calculated": json_output_analysis}
+    output_json = {"raw": subset_json_dict, "calculated": data}
     
     return output_json
 
