@@ -7,9 +7,6 @@ from edgar import *
 import pandas as pd
 import json
 
-set_identity("dowang10@student.ubc.ca")
-logging.info("EDGAR identity set")
-
 def retrieve_value_full(company, accn, fact_name):
     try:
         filtered_df = company[(company['namespace'] == 'us-gaap') & (company['accn'] == str(accn)) & (company['fact'] == str(fact_name))]
@@ -42,6 +39,9 @@ def process_fha(req):
 
     logging.info("Params loaded")
     # ADDED START
+
+    set_identity("dowang10@student.ubc.ca")
+    logging.info("EDGAR identity set")
 
     try:
         filing = get_by_accession_number(str(accession_code))
