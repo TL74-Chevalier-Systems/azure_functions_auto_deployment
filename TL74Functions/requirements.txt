@@ -3,4 +3,3 @@ azure-cosmos
 azure-core
 edgar
 pandas
-json
