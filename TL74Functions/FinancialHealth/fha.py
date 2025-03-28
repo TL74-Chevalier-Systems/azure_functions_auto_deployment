@@ -7,6 +7,9 @@ from edgar import *
 import pandas as pd
 import json
 
+set_identity("dowang10@student.ubc.ca")
+logging.info("EDGAR identity set")
+
 def retrieve_value_full(company, accn, fact_name):
     try:
         filtered_df = company[(company['namespace'] == 'us-gaap') & (company['accn'] == str(accn)) & (company['fact'] == str(fact_name))]
@@ -37,26 +40,27 @@ def process_fha(req):
     date = req.params.get("date")
     form = req.params.get("form")
 
+    logging.info("Params loaded")
     # ADDED START
 
     try:
         filing = get_by_accession_number(str(accession_code))
-        print(filing)
+        logging.info(filing)
     except Exception as e:
-        print("FHA Error: unable to find filing with accession number " + str(accession_code))
+        logging.info("FHA Error: unable to find filing with accession number " + str(accession_code))
         exit()
 
     try:
         company = Company(str(filing.cik)).get_facts().to_pandas()
     except Exception as e:
-        print("FHA Error: unable to generate pandas dataframe for company with CIK " + str(filing.cik))
+        logging.info("FHA Error: unable to generate pandas dataframe for company with CIK " + str(filing.cik))
         exit()
 
     try:
         company_accn_subset = company[(company['namespace'] == 'us-gaap') & (company['accn'] == str(accession_code))]
-        print(f"Extracted {len(company_accn_subset)} rows for accession number {accession_code}")
+        logging.info(f"Extracted {len(company_accn_subset)} rows for accession number {accession_code}")
     except Exception as e:
-        print(f"FHA Error extracting rows for accession number {accession_code}: {e}")
+        logging.info(f"FHA Error extracting rows for accession number {accession_code}: {e}")
         exit()
 
     try:
@@ -70,14 +74,14 @@ def process_fha(req):
         subset_json_str = json.dumps(subset_json_dict, indent=4, default=str)  # default=str converts Timestamp to string
 
     except Exception as e:
-        print(f"FHA Error converting dataframe subset to JSON: {e}")
+        logging.info(f"FHA Error converting dataframe subset to JSON: {e}")
         exit()
 
     try:
         company['end'] = pd.to_datetime(company['end'])
         company['timestamp'] = company['end'].astype('int64')
     except Exception as e:
-        print("FHA Error: unable to parse/organize date format")
+        logging.info("FHA Error: unable to parse/organize date format")
         exit()
 
     test_value = retrieve_value_full(company, accession_code, "Assets")
