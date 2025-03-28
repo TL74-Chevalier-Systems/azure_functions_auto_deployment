@@ -1,5 +1,5 @@
 azure-functions
 azure-cosmos
 azure-core
-edgar
+edgartools
 pandas
