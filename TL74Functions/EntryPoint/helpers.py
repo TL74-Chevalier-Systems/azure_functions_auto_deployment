@@ -112,13 +112,14 @@ def call_financial_health_analysis(accession_code, ticker, date, form):
         "form": form
     }
 
+    logging.info(f"Payload for financial health analysis: {payload}")
     try:
         finanical_analysis_endpoint = f"{FINANICAL_HEALTH_ANALYSIS_URL}?code={TRIGGER_API_KEY}"
         response = requests.post(finanical_analysis_endpoint, json=payload)
 
         if response.status_code == 200:
             logging.info("Financial health analysis triggered successfully.")
-            return response.json(), 200
+            return response.text, 200
         else:
             logging.error(f"Failed to trigger financial health analysis: {response.status_code}")
             return f"Error: {response.status_code}", response.status_code
