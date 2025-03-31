@@ -3,3 +3,4 @@ azure-cosmos
 azure-core
 edgartools
 pandas
+requests
