@@ -25,10 +25,6 @@ def fha_wrapper(req):
 
     logging.info("Params loaded")
     
-    # ADDED START
-    fha_json = fha(accession_code)
-    # ADDED END    
-    
     # Parse JSON body if needed
     if not (accession_code and ticker and date and form):
         try:
@@ -40,9 +36,13 @@ def fha_wrapper(req):
         date = date or req_body.get("date")
         form = form or req_body.get("form")
 
+     
+
     # Proceed if all required parameters are available
     if accession_code and ticker and date and form:
         try:
+            fha_json = fha(accession_code)
+             
             client = CosmosClient(COSMOS_DB_URL, COSMOS_DB_KEY)
             database = client.get_database_client(COSMOS_DB_DATABASE)
             filings_container = database.get_container_client(COSMOS_DB_CONTAINER_FILINGS)
