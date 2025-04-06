@@ -13,11 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
     steps:
-    - name: 'Checkout GitHub Action'
+    - name: Start SSH agent with deploy key
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Checkout repo and submodules over SSH
       uses: actions/checkout@v3
       with:
-        submodules: recursive
-        ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+        submodules: recursive  # Needed to pull submodules
+        ssh-known-hosts: github.com
 
     - name: Setup Python ${{ env.PYTHON_VERSION }} Environment
       uses: actions/setup-python@v4
