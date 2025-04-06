@@ -1,0 +1,3 @@
+[submodule "TL74Functions/LLMAnalysis/llm_analysis_repo"]
+	path = TL74Functions/LLMAnalysis/llm_analysis_repo
+	url = git@github.com:TL74-Chevalier-Systems/llm_analysis.git
