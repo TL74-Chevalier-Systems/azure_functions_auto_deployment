@@ -16,7 +16,8 @@ jobs:
     - name: 'Checkout GitHub Action'
       uses: actions/checkout@v3
       with:
-        submodules: recursive  # ✅ This fetches your submodules
+        submodules: true  # Ensure submodules are initialized
+        fetch-depth: 0
 
     - name: Setup Python ${{ env.PYTHON_VERSION }} Environment
       uses: actions/setup-python@v4
