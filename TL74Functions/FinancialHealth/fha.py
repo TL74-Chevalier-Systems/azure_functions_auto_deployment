@@ -1,10 +1,13 @@
 from edgar import *
 import pandas as pd
+from dotenv import load_dotenv
+import os
 import json
 
 def fha(accn):
 
-    set_identity("dowang10@student.ubc.ca")
+    identity = os.getenv("EDGAR_IDENTITY")
+    set_identity("identity")
 
     class DB_ANALYSIS:
         def __init__(self):
