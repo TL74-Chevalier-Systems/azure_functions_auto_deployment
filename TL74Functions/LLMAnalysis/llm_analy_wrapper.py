@@ -3,7 +3,7 @@ import logging
 from azure.cosmos import CosmosClient
 
 # Local Imports
-from llm_analysis_repo.scripts.llm_pipeline import llm_pipeline
+from .llm_analysis_repo.scripts.llm_pipeline import llm_pipeline
 
 def initialize_llm_workflow(req):
     COSMOS_DB_URL = os.getenv("COSMOS_DB_URL")
