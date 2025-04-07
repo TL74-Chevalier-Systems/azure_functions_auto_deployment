@@ -35,7 +35,12 @@ def process_filing_request(req):
                 response_message, status_code = call_financial_health_analysis(accession_code, ticker, date, form)
                 if status_code != 200:
                     return response_message, status_code
-            #Need to call LLM trrigger as well.
+                
+                # Call LLM Analysis
+                logging.info(f"Triggering LLM analysis for {form}.")
+                response_message, status_code = call_llm_analysis(accession_code, ticker, date, form)
+                if status_code != 200:
+                    return response_message, status_code
 
 
             if form == "13F-HR":
@@ -125,4 +130,37 @@ def call_financial_health_analysis(accession_code, ticker, date, form):
             return f"Error: {response.status_code}", response.status_code
     except Exception as ex:
         logging.error(f"Failed to trigger analysis: {ex}")
+        return str(ex), 500
+    
+def call_llm_analysis(accession_code, ticker, date, form):
+    LLM_ANALYSIS_URL = 'https://tl74functionsapp.azurewebsites.net/api/LLMAnalysis'
+    TRIGGER_API_KEY = os.getenv("TRIGGER_API_KEY")
+
+    if not TRIGGER_API_KEY:
+        error_msg = (
+            "Missing TRIGGER_API_KEY configuration. Please ensure 'TRIGGER_API_KEY' is set."
+        )
+        logging.error(error_msg)
+        return error_msg, 500
+
+    payload = {
+        "accession_code": accession_code,
+        "ticker": ticker,
+        "date": date,
+        "form": form
+    }
+
+    logging.info(f"Payload for LLM analysis: {payload}")
+    try:
+        llm_analysis_endpoint = f"{LLM_ANALYSIS_URL}?code={TRIGGER_API_KEY}"
+        response = requests.post(llm_analysis_endpoint, json=payload)
+
+        if response.status_code == 200:
+            logging.info("LLM analysis triggered successfully.")
+            return response.text, 200
+        else:
+            logging.error(f"Failed to trigger LLM analysis: {response.status_code}")
+            return f"Error: {response.status_code}", response.status_code
+    except Exception as ex:
+        logging.error(f"Failed to trigger LLM analysis: {ex}")
         return str(ex), 500
