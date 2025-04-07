@@ -60,8 +60,8 @@ def initialize_llm_workflow(req):
                     partition_key=accession_code
                 )
                 logging.info(f"Found existing item for {accession_code}")
-            except CosmosResourceNotFoundError:
-                logging.warning(f"No existing filing found for {accession_code}. Skipping update.")
+            except Exception as e:
+                logging.warning(f"Error {e} No existing filing found for {accession_code}. Skipping update.")
                 return f"No existing filing found for {accession_code}.", 404
 
             # Append the new analysis as a single entry
