@@ -40,6 +40,12 @@ def initialize_llm_workflow(req):
 
     # Proceed if all required parameters are available
     if accession_code and ticker and date and form:
+
+        logging.info(f"Edgar Identity used from env: {os.getenv('EDGAR_IDENTITY')}")
+        logging.info(f"LLM URL Used: {os.getenv('BASE_URL')}")
+        logging.info(f"Chunking Token Max: {os.getenv('MAX_TOKENS')}")
+
+
         comp_analy, risk_analy = llm_pipeline(accession_code)
             
         client = CosmosClient(COSMOS_DB_URL, COSMOS_DB_KEY)
