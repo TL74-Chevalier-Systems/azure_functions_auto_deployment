@@ -57,7 +57,7 @@ def initialize_llm_workflow(req):
             try:
                 existing_item = filings_container.read_item(
                     item=accession_code,
-                    partition_key=accession_code
+                    partition_key=ticker
                 )
                 logging.info(f"Found existing item for {accession_code}")
             except Exception as e:
