@@ -47,6 +47,11 @@ def initialize_llm_workflow(req):
         try:
             # Run LLM pipeline
             comp_analy, risk_analy = llm_pipeline(accession_code)
+            
+            # Skip appending if both are None
+            if comp_analy is None and risk_analy is None:
+                logging.warning(f"Skipping update: No valid analyses for {accession_code}")
+                return f"No valid analysis to append for {accession_code}.", 204
 
             # Connect to Cosmos DB
             client = CosmosClient(COSMOS_DB_URL, COSMOS_DB_KEY)
