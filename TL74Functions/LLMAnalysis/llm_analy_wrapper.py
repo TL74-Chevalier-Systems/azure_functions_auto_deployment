@@ -50,8 +50,8 @@ def initialize_llm_workflow(req):
             
             # Skip appending if both are None
             if comp_analy is None and risk_analy is None:
-                logging.warning(f"Skipping update: No valid analyses for {accession_code}")
-                return f"No valid analysis to append for {accession_code}.", 204
+                logging.warning(f"Skipping update: No valid LLM analyses for {accession_code}")
+                return f"No valid LLM analysis to append for {accession_code}.", 204
 
             # Connect to Cosmos DB
             client = CosmosClient(COSMOS_DB_URL, COSMOS_DB_KEY)
@@ -79,8 +79,11 @@ def initialize_llm_workflow(req):
             # Replace the document in the DB
             filings_container.replace_item(item=accession_code, body=existing_item)
 
-            return f"Updated filing entry for {accession_code}", 200
-
+            response_message = (
+                f"Received data: Accession Code - {accession_code}, "
+                f"Ticker - {ticker}, Date - {date}, Form - {form}."
+            )
+            return response_message, 200
         except Exception as e:
             logging.error(f"An error occurred: {e}")
             return "An error occurred while processing your request.", 500
