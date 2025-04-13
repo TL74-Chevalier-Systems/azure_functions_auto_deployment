@@ -71,17 +71,55 @@ def fha_wrapper(req):
 
             # Attempt to find fiscal year and quarter details
             fiscal_period = None
-            fiscal_year = None  
-            if "raw" in fha_json and fha_json["raw"]:
-                # Get the first key in the raw dictionary
-                first_key = next(iter(fha_json["raw"]))
-                raw_data = fha_json["raw"][first_key]
+            fiscal_year = None
+
+            logging.info(f"Starting fiscal period/year extraction for accession_code: {accession_code}")
+
+            if "raw" not in fha_json:
+                logging.warning(f"'raw' key missing in fha_json for {accession_code}")
+            elif not fha_json["raw"]:
+                logging.warning(f"'raw' dictionary is empty for {accession_code}")
+            else:
+                logging.info(f"Found 'raw' data in fha_json for {accession_code}")
                 
-                # Extract fiscal period and year if available
-                if "fp" in raw_data:
-                    fiscal_period = raw_data.get("fp")
-                if "fy" in raw_data:
-                    fiscal_year = raw_data.get("fy")
+                try:
+                    # Get the first key in the raw dictionary
+                    if len(fha_json["raw"]) == 0:
+                        logging.warning(f"'raw' dictionary has no keys for {accession_code}")
+                    else:
+                        first_key = next(iter(fha_json["raw"]))
+                        logging.info(f"First key in raw data: {first_key}")
+                        
+                        raw_data = fha_json["raw"][first_key]
+                        logging.info(f"Raw data structure for first key: {list(raw_data.keys())}")
+                        
+                        # Extract fiscal period and year if available
+                        if "fp" in raw_data:
+                            fiscal_period = raw_data.get("fp")
+                            logging.info(f"Found fiscal period: {fiscal_period}")
+                        else:
+                            logging.warning(f"'fp' key not found in raw_data for {accession_code}")
+                            
+                        if "fy" in raw_data:
+                            fiscal_year = raw_data.get("fy")
+                            logging.info(f"Found fiscal year: {fiscal_year}")
+                        else:
+                            logging.warning(f"'fy' key not found in raw_data for {accession_code}")
+                except Exception as e:
+                    logging.error(f"Error extracting fiscal data: {str(e)}")
+
+            # Add fiscal period and year to the existing item if found
+            if fiscal_period:
+                existing_item["fiscal_period"] = fiscal_period
+                logging.info(f"Added fiscal period '{fiscal_period}' to document for {accession_code}")
+            else:
+                logging.warning(f"No fiscal period to add for {accession_code}")
+
+            if fiscal_year:
+                existing_item["fiscal_year"] = fiscal_year
+                logging.info(f"Added fiscal year '{fiscal_year}' to document for {accession_code}")
+            else:
+                logging.warning(f"No fiscal year to add for {accession_code}")
                 
             # Add fiscal period and year to the existing item if found
             if fiscal_period:
@@ -96,7 +134,7 @@ def fha_wrapper(req):
             # Replace the document in the DB
             filings_container.replace_item(item=accession_code, body=existing_item)
 
-            
+
             response_message = (
                 f"Received data: Accession Code - {accession_code}, "
                 f"Ticker - {ticker}, Date - {date}, Form - {form}."
