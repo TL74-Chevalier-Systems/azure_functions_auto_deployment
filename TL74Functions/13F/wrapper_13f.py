@@ -1,6 +1,7 @@
 import os
 import logging
 import subprocess
+import json
 from azure.cosmos import CosmosClient
 
 def initialize_13f_workflow(req):
@@ -58,7 +59,15 @@ def initialize_13f_workflow(req):
                 logging.error(f"Extraction failed: {extraction_result.stderr}")
                 return f"Extraction failed for {accession_code}.", 500
 
-            logging.info(extraction_result.stdout)
+            try:
+                # Parse the JSON output into a Python list
+                data = json.loads(extraction_result.stdout)
+                if not isinstance(data, list):
+                    raise ValueError("Extraction output is not a list.")
+                logging.info(f"Extraction successful: {data}")
+            except (json.JSONDecodeError, ValueError) as e:
+                logging.error(f"Failed to parse extraction output as a list: {e}")
+                return "Failed to parse extraction output.", 500
 
             # Connect to Cosmos DB
             client = CosmosClient(COSMOS_DB_URL, COSMOS_DB_KEY)
@@ -76,15 +85,10 @@ def initialize_13f_workflow(req):
                 logging.warning(f"Error {e} No existing filing found for {accession_code}. Skipping update.")
                 return f"No existing filing found for {accession_code}.", 404
 
-            # Append the new analysis as a single entry
-            # new_analysis = {
-            #     "comp_analysis": comp_analy,
-            #     "risk_analysis": risk_analy
-            # }
-            # existing_item.setdefault("analyses", []).append(new_analysis)
+            existing_item.setdefault("analyses", []).append(data)
 
-            # # Replace the document in the DB
-            # filings_container.replace_item(item=accession_code, body=existing_item)
+            # Replace the document in the DB
+            filings_container.replace_item(item=accession_code, body=existing_item)
 
             response_message = (
                 f"Received data: Accession Code - {accession_code}, "
