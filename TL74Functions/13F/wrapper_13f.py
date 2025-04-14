@@ -84,8 +84,13 @@ def initialize_13f_workflow(req):
             except Exception as e:
                 logging.warning(f"Error {e} No existing filing found for {accession_code}. Skipping update.")
                 return f"No existing filing found for {accession_code}.", 404
+            
+            # Append the new analysis as a single entry
+            new_analysis = {
+                "13f": data,
+            }
 
-            existing_item.setdefault("analyses", []).append(data)
+            existing_item.setdefault("analyses", []).append(new_analysis)
 
             # Replace the document in the DB
             filings_container.replace_item(item=accession_code, body=existing_item)
