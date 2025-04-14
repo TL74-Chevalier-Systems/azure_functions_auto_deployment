@@ -16,8 +16,20 @@ jobs:
     - name: 'Checkout GitHub Action'
       uses: actions/checkout@v3
       with:
-        submodules: recursive
-        ssh-key: ${{ secrets.LLM_ANALYSIS_SSH }}
+        submodules: false  # Don't fetch submodules automatically yet
+
+    - name: Set up SSH for LLM Analysis
+      uses: webfactory/ssh-agent@v0.7.0
+      with:
+        ssh-private-key: |
+          ${{ secrets.LLM_ANALYSIS_SSH }}
+          ${{ secrets.ANALYSIS_13F_SSH }}
+        
+    - name: Update submodules
+      run: |
+        git submodule update --init --recursive
+        # For debugging only - list the submodules to ensure they're properly initialized
+        git submodule status
 
     - name: Setup Python ${{ env.PYTHON_VERSION }} Environment
       uses: actions/setup-python@v4
