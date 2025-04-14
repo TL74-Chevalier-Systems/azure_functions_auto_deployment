@@ -17,14 +17,14 @@ The system stores all results in Azure Cosmos DB, creating a comprehensive finan
 
 ```
 ┌─────────────┐     ┌──────────────┐     ┌───────────────────┐
-│ Entry Point │────>│ Financial    │────>│                   │
-│ Function    │     │ Health       │     │                   │
+│ Entry Point │────>│ Financial    │     │                   │
+│ Function    │     │ Health       │────>│                   │
 └─────────────┘     │ Analysis     │     │                   │
-       │            └──────────────┘     │                   │
-       │            ┌──────────────┐     │                   │
-       └───────────>│ 13F Analysis │     │ Azure Cosmos DB   │
-       │            │              │     │                   │
-       │            └──────────────┘     │                   │
+       │            └──────────────┘     │                   │            ┌────────────────┐
+       │            ┌──────────────┐     │                   │            │   Frontend     │ 
+       └───────────>│ 13F Analysis │────>│ Azure Cosmos DB   │─ ─ ─ ─ ─ ─>│ (External to   │
+       │            │              │     │                   │            │          repo) │
+       │            └──────────────┘     │                   │            └────────────────┘
        │            ┌──────────────┐     │                   │
        └───────────>│ LLM Analysis │────>│                   │
                     │              │     │                   │
