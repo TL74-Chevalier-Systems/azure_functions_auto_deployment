@@ -8,7 +8,8 @@ This project provides a serverless architecture for processing SEC filings (10-K
 
 1. **Entry Point Function**: Receives filing information and coordinates analysis workflows
 2. **Financial Health Analysis**: Extracts and calculates key financial ratios and metrics
-3. **LLM Analysis**: Provides advanced natural language analysis of filings
+3. **13F Holding Analysis**: Extracts and simplifies institutional financial holding data
+4. **LLM Analysis**: Provides advanced natural language analysis of filings
 
 The system stores all results in Azure Cosmos DB, creating a comprehensive financial data repository.
 
@@ -20,11 +21,15 @@ The system stores all results in Azure Cosmos DB, creating a comprehensive finan
 │ Function    │     │ Health       │     │                   │
 └─────────────┘     │ Analysis     │     │                   │
        │            └──────────────┘     │                   │
-       │                                 │   Azure Cosmos DB │
+       │            ┌──────────────┐     │                   │
+       └───────────>│ 13F Analysis │     │ Azure Cosmos DB   │
+       │            │              │     │                   │
+       │            └──────────────┘     │                   │
        │            ┌──────────────┐     │                   │
        └───────────>│ LLM Analysis │────>│                   │
                     │              │     │                   │
                     └──────────────┘     └───────────────────┘
+
 ```
 
 ## Features
@@ -35,6 +40,9 @@ The system stores all results in Azure Cosmos DB, creating a comprehensive finan
   - Solvency ratios (Debt to Equity, Interest Coverage)
   - Profitability ratios (Gross Margin, Operating Margin, Net Margin)
   - Efficiency ratios (Inventory Turnover, Asset Turnover)
+- **13F Holding Analysis**: Determines financial data including:
+  - Share Amounts and Values of company stocks held by institutional managers
+  - Comparative holdings of a company between periods
 - **LLM-Based Analysis**: Uses large language models to analyze:
   - Competitive analysis
   - Risk assessment
@@ -111,8 +119,9 @@ To process a filing, send a POST request to the EntryPoint function with the fol
 The system will:
 1. Store the filing information in Cosmos DB
 2. Trigger the Financial Health Analysis (for 10-K and 10-Q forms)
-3. Trigger the LLM Analysis (for 10-K and 10-Q forms)
-4. Update the Cosmos DB record with the analysis results
+3. Trigger the 13F Holding Analysis (for 13F-HR forms)
+4. Trigger the LLM Analysis (for 10-K and 10-Q forms)
+5. Update the Cosmos DB record with the analysis results
 
 ## Project Structure
 
@@ -127,6 +136,11 @@ TL74Functions/
 │   ├── function.json
 │   ├── fha.py                   # Main analysis logic
 │   └── fha_wrapper.py           # Handles requests & DB operations
+├── 13F/                         # 13F analysis function
+│   ├── __init__.py
+│   ├── function.json
+│   ├── wrapper_13f.py           # Handles requests & DB operations
+│   └── 13F-Analysis/            # Submodule with 13F analysis code
 ├── LLMAnalysis/                 # LLM analysis function
 │   ├── __init__.py
 │   ├── function.json
