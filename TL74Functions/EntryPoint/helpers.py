@@ -46,6 +46,9 @@ def process_filing_request(req):
             if form == "13F-HR":
                 # Call 13F-HR analysis trigger
                 print("13F-HR analysis trigger called.")
+                response_message, status_code = call_13f_analysis(accession_code, ticker, date, form)
+                if status_code != 200:
+                    return response_message, status_code
 
             return response_message, 200
         except Exception as e:
@@ -163,4 +166,37 @@ def call_llm_analysis(accession_code, ticker, date, form):
             return f"Error: {response.status_code}", response.status_code
     except Exception as ex:
         logging.error(f"Failed to trigger LLM analysis: {ex}")
+        return str(ex), 500
+    
+def call_13f_analysis(accession_code, ticker, date, form):
+    ANALYSIS_13F = 'https://tl74functionsapp.azurewebsites.net/api/ThirteenF'
+    TRIGGER_API_KEY = os.getenv("TRIGGER_API_KEY")
+
+    if not TRIGGER_API_KEY:
+        error_msg = (
+            "Missing TRIGGER_API_KEY configuration. Please ensure 'TRIGGER_API_KEY' is set."
+        )
+        logging.error(error_msg)
+        return error_msg, 500
+
+    payload = {
+        "accession_code": accession_code,
+        "ticker": ticker,
+        "date": date,
+        "form": form
+    }
+
+    logging.info(f"Payload for 13F analysis: {payload}")
+    try:
+        llm_analysis_endpoint = f"{ANALYSIS_13F}?code={TRIGGER_API_KEY}"
+        response = requests.post(llm_analysis_endpoint, json=payload)
+
+        if response.status_code == 200:
+            logging.info("13F analysis triggered successfully.")
+            return response.text, 200
+        else:
+            logging.error(f"Failed to trigger 13F analysis: {response.status_code}")
+            return f"Error: {response.status_code}", response.status_code
+    except Exception as ex:
+        logging.error(f"Failed to trigger 13F analysis: {ex}")
         return str(ex), 500
