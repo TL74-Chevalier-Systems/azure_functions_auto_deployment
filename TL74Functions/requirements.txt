@@ -1,9 +1,9 @@
 azure-functions
 azure-cosmos
 azure-core
-edgartools
-pandas
-requests
+edgartools==3.5.1
+pandas==2.2.3
+requests==2.32.3
 
 # LLM Analysis
 dotenv==0.9.9
