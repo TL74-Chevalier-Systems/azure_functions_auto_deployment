@@ -18,7 +18,7 @@ jobs:
       with:
         submodules: false  # Don't fetch submodules automatically yet
 
-    - name: Set up SSH for LLM Analysis
+    - name: Set up SSH for LLM Analysis and 13F
       uses: webfactory/ssh-agent@v0.7.0
       with:
         ssh-private-key: |
