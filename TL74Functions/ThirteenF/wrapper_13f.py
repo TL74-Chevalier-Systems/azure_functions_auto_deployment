@@ -43,7 +43,7 @@ def initialize_13f_workflow(req):
 
         try:
             extraction_command = [
-                "python",
+                "python3",
                 "main.py",
                 "extract-13f",
                 accession_code
