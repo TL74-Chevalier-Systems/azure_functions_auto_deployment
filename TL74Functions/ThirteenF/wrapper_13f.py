@@ -4,6 +4,11 @@ import subprocess
 import json
 from azure.cosmos import CosmosClient
 
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "13F-Analysis"))
+
+from commands.extraction import extract_13f_from_accession
+
 def initialize_13f_workflow(req):
     COSMOS_DB_URL = os.getenv("COSMOS_DB_URL")
     COSMOS_DB_KEY = os.getenv("COSMOS_DB_KEY")
@@ -42,26 +47,29 @@ def initialize_13f_workflow(req):
         logging.info(f"Edgar Identity used from env: {os.getenv('EDGAR_IDENTITY')}")
 
         try:
-            extraction_command = [
-                "python3",
-                "main.py",
-                "extract-13f",
-                accession_code
-            ]
-            extraction_result = subprocess.run(
-                extraction_command,
-                capture_output=True,
-                text=True,
-                cwd=os.path.join(os.path.dirname(__file__), "13F-Analysis")
-            )
+            # extraction_command = [
+            #     "python3",
+            #     "main.py",
+            #     "extract-13f",
+            #     accession_code
+            # ]
+            # extraction_result = subprocess.run(
+            #     extraction_command,
+            #     capture_output=True,
+            #     text=True,
+            #     cwd=os.path.join(os.path.dirname(__file__), "13F-Analysis")
+            # )
 
-            if extraction_result.returncode != 0:
-                logging.error(f"Extraction failed: {extraction_result.stderr}")
-                return f"Extraction failed for {accession_code}.", 500
+            data = extract_13f_from_accession(accession_code)
+
+
+            # if extraction_result.returncode != 0:
+            #     logging.error(f"Extraction failed: {extraction_result.stderr}")
+            #     return f"Extraction failed for {accession_code}.", 500
 
             try:
                 # Parse the JSON output into a Python list
-                data = json.loads(extraction_result.stdout)
+                # data = json.loads(extraction_result.stdout)
                 if not isinstance(data, list):
                     raise ValueError("Extraction output is not a list.")
                 logging.info(f"Extraction successful: {data}")
