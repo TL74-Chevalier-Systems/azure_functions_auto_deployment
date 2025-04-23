@@ -188,8 +188,8 @@ def call_13f_analysis(accession_code, ticker, date, form):
 
     logging.info(f"Payload for 13F analysis: {payload}")
     try:
-        llm_analysis_endpoint = f"{ANALYSIS_13F}?code={TRIGGER_API_KEY}"
-        response = requests.post(llm_analysis_endpoint, json=payload)
+        thirteenf_analysis_endpoint = f"{ANALYSIS_13F}?code={TRIGGER_API_KEY}"
+        response = requests.post(thirteenf_analysis_endpoint, json=payload)
 
         if response.status_code == 200:
             logging.info("13F analysis triggered successfully.")
