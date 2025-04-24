@@ -3,11 +3,14 @@ import logging
 import subprocess
 import json
 from azure.cosmos import CosmosClient
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
 
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "13F-Analysis"))
 
 from commands.extraction import extract_13f_from_accession
+
+MAX_DOC_SIZE = 1.9 * 1024 * 1024
 
 def initialize_13f_workflow(req):
     COSMOS_DB_URL = os.getenv("COSMOS_DB_URL")
@@ -47,25 +50,8 @@ def initialize_13f_workflow(req):
         logging.info(f"Edgar Identity used from env: {os.getenv('EDGAR_IDENTITY')}")
 
         try:
-            # extraction_command = [
-            #     "python3",
-            #     "main.py",
-            #     "extract-13f",
-            #     accession_code
-            # ]
-            # extraction_result = subprocess.run(
-            #     extraction_command,
-            #     capture_output=True,
-            #     text=True,
-            #     cwd=os.path.join(os.path.dirname(__file__), "13F-Analysis")
-            # )
 
             data = extract_13f_from_accession(accession_code)
-
-
-            # if extraction_result.returncode != 0:
-            #     logging.error(f"Extraction failed: {extraction_result.stderr}")
-            #     return f"Extraction failed for {accession_code}.", 500
 
             try:
                 # Parse the JSON output into a Python list
@@ -80,34 +66,53 @@ def initialize_13f_workflow(req):
             # Connect to Cosmos DB
             client = CosmosClient(COSMOS_DB_URL, COSMOS_DB_KEY)
             database = client.get_database_client(COSMOS_DB_DATABASE)
-            filings_container = database.get_container_client(COSMOS_DB_CONTAINER_FILINGS)
+            container = database.get_container_client(COSMOS_DB_CONTAINER_FILINGS)
 
             # Try to read existing document
             try:
-                existing_item = filings_container.read_item(
-                    item=accession_code,
-                    partition_key=ticker
-                )
-                logging.info(f"Found existing item for {accession_code}")
-            except Exception as e:
-                logging.warning(f"Error {e} No existing filing found for {accession_code}. Skipping update.")
-                return f"No existing filing found for {accession_code}.", 404
-            
-            # Append the new analysis as a single entry
-            new_analysis = {
-                "13f": data,
-            }
+                filing = container.read_item(item=accession_code, partition_key=ticker)
+            except CosmosResourceNotFoundError:
+                return f"No existing filing for {accession_code}", 404
 
-            existing_item.setdefault("analyses", []).append(new_analysis)
+            chunks = []
+            current_chunk = []
+            current_size = 0
 
-            # Replace the document in the DB
-            filings_container.replace_item(item=accession_code, body=existing_item)
+            for entry in data:
+                entry_str = json.dumps(entry)
+                entry_size = len(entry_str.encode("utf-8"))
 
-            response_message = (
-                f"Received data: Accession Code - {accession_code}, "
-                f"Ticker - {ticker}, Date - {date}, Form - {form}."
-            )
-            return response_message, 200
+                if current_size + entry_size > MAX_DOC_SIZE:
+                    chunks.append(current_chunk)
+                    current_chunk = [entry]
+                    current_size = entry_size
+                else:
+                    current_chunk.append(entry)
+                    current_size += entry_size
+
+            if current_chunk:
+                chunks.append(current_chunk)
+
+            chunk_refs = []
+            for i, chunk in enumerate(chunks):
+                chunk_id = f"{accession_code}::chunk_{i}"
+                container.upsert_item({
+                    "id": chunk_id,
+                    "accession_code": accession_code,
+                    "ticker": ticker,
+                    "chunk_index": i,
+                    "13f_chunk": chunk,
+                })
+                chunk_refs.append(chunk_id)
+
+            filing.setdefault("analyses", []).append({
+                "13f_chunks": chunk_refs,
+                "chunk_count": len(chunk_refs)
+            })
+
+            container.replace_item(item=accession_code, body=filing)
+
+            return f"Stored {len(chunk_refs)} chunk(s) for {accession_code}.", 200
         except Exception as e:
             logging.error(f"An error occurred: {e}")
             return "An error occurred while processing your request.", 500
